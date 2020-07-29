@@ -1,56 +1,56 @@
+import { Fragment } from 'react';
+import Link from 'next/link';
 import Head from 'next/head';
-
-// Style Scoped to this Page Component
-// Note: Should end with module.css || module.scss
-// Custom Imports
-
+import fs from 'fs';
+import path from 'path';
 import Layout from '../components/layout/Layout';
-import { getSortedPostsData } from '../lib/posts';
 
 // All Routes are displayed in pages folder
 // Everything inside pages folder should be default export
 
-export default function Home({ allPostsData }) {
-  console.log(allPostsData);
-  return (
-    <div>
-      <Head>
-        <title>Blog App</title>
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="description" content="blog app created using next js" />
-        <meta name="og:title" content="Blog App" />
-      </Head>
-      <main>
-        <Layout>
-          <ul>
-            {allPostsData.map((post, index) => {
-              return (
-                <>
-                  <li>{post.id}</li>
-                  <li>{post.title}</li>
-                  <li>{post.date}</li>
-                </>
-              );
-            })}
-          </ul>
-          <style jsx>{`
-            .text {
-              color: red;
-            }
-          `}</style>
-        </Layout>
-      </main>
-    </div>
-  );
-}
+//Slugs Definition - stackoverflow
+// Slug is used to make a name that is not acceptable for various
+// reasons - e.g. containing special characters, too long, mixed-case,
+// etc. - appropriate for the target usage. What target usage means is context dependent,
+//but in general case slug is a more appropriate combination of other fields. In the above case,
+// only one field is used - title.
 
-//Static Site Generation With Date - use getStaticProps
+const Home = ({ slugs }) => (
+  <Fragment>
+    <Head>
+      <title>Blog App</title>
+      <link rel="icon" href="/favicon.ico" />
+      <meta name="description" content="blog app created using next js" />
+      <meta name="og:title" content="Blog App" />
+    </Head>
+    <Layout>
+      Slugs:
+      {slugs.map((slug, index) => {
+        return (
+          <div key={index}>
+            <Link href={`/blog/${slug}`}>
+              <a style={{ color: 'blue' }}>{`/blog/${slug}`}</a>
+            </Link>
+          </div>
+        );
+      })}
+    </Layout>
+  </Fragment>
+);
+
+//Passing Data to component as props using getStaticProps
+//Why readfilesync? why not readfileasync figure it out later
 
 export const getStaticProps = async () => {
-  const allPostsData = getSortedPostsData();
+  const postsDirectory = path.join(process.cwd(), 'posts');
+
+  const files = fs.readdirSync(postsDirectory);
+
   return {
     props: {
-      allPostsData: allPostsData,
+      slugs: files.map((filename) => filename.replace('.md', '')),
     },
   };
 };
+
+export default Home;
